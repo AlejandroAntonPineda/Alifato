@@ -1,0 +1,1873 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alifato Interactivo - Aprende el Abecedario Árabe</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter para UI y Amiri / Noto Naskh Arabic para caligrafía árabe clara -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        arabic: ['"Noto Naskh Arabic"', '"Amiri"', 'serif'],
+                        calligraphy: ['"Amiri"', 'serif']
+                    },
+                    colors: {
+                        andalus: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                            950: '#042f2e',
+                        },
+                        gold: {
+                            100: '#fef3c7',
+                            300: '#fcd34d',
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                        },
+                        sand: {
+                            50: '#fdfbf7',
+                            100: '#f9f5eb',
+                            200: '#f0e6d2',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Patrón geométrico árabe sutil de fondo */
+        .bg-islamic-pattern {
+            background-color: #fdfbf7;
+            background-image: radial-gradient(#0f766e 0.6px, transparent 0.6px), radial-gradient(#d97706 0.6px, #fdfbf7 0.6px);
+            background-size: 28px 28px;
+            background-position: 0 0, 14px 14px;
+        }
+        .dark .bg-islamic-pattern {
+            background-color: #0f172a;
+            background-image: radial-gradient(#14b8a6 0.6px, transparent 0.6px), radial-gradient(#f59e0b 0.6px, #0f172a 0.6px);
+            background-size: 28px 28px;
+            background-position: 0 0, 14px 14px;
+        }
+
+        /* Estilos personalizados para barra de desplazamiento */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .dark ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #0d9488;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0f766e;
+        }
+
+        /* Animación suave para tarjetas */
+        .letter-card {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .letter-card:hover {
+            transform: translateY(-4px);
+        }
+
+        /* Evitar scroll al dibujar en canvas móvil */
+        #drawingCanvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="bg-islamic-pattern text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-300">
+
+    <!-- ENCABEZADO PRINCIPAL -->
+    <header class="sticky top-0 z-30 bg-andalus-900/95 dark:bg-slate-900/95 backdrop-blur-md text-white shadow-lg border-b-2 border-gold-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center py-3 gap-3">
+                <!-- Logo y Título -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center text-andalus-950 font-arabic text-3xl font-bold shadow-md">
+                        أ
+                    </div>
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
+                            <span>Alifato</span>
+                            <span class="text-gold-400 font-arabic text-2xl font-normal">الأبجدية العربية</span>
+                        </h1>
+                        <p class="text-xs text-andalus-100/80">Aprende el abecedario árabe paso a paso desde el español</p>
+                    </div>
+                </div>
+
+                <!-- Navegación por Pestañas y Controles -->
+                <div class="flex items-center gap-2 sm:gap-3 w-full md:w-auto justify-center md:justify-end overflow-x-auto py-1">
+                    <nav class="flex bg-andalus-950/60 dark:bg-slate-800 p-1 rounded-xl border border-andalus-700/50">
+                        <button onclick="switchTab('abecedario')" id="tab-abecedario" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all bg-gold-500 text-andalus-950 shadow font-semibold flex items-center gap-1.5">
+                            <i class="fa-solid fa-table-cells"></i>
+                            <span>28 Letras</span>
+                        </button>
+                        <button onclick="switchTab('harakat')" id="tab-harakat" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all text-andalus-100 hover:text-white flex items-center gap-1.5">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Vocales (Harakat)</span>
+                        </button>
+                        <button onclick="switchTab('pizarra')" id="tab-pizarra" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all text-andalus-100 hover:text-white flex items-center gap-1.5">
+                            <i class="fa-solid fa-pen-nib"></i>
+                            <span>Pizarra</span>
+                        </button>
+                        <button onclick="switchTab('quiz')" id="tab-quiz" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all text-andalus-100 hover:text-white flex items-center gap-1.5">
+                            <i class="fa-solid fa-trophy"></i>
+                            <span>Práctica / Quiz</span>
+                        </button>
+                    </nav>
+
+                    <!-- Botón Modo Oscuro -->
+                    <button onclick="toggleDarkMode()" class="p-2 rounded-xl bg-andalus-800 hover:bg-andalus-700 text-gold-300 border border-andalus-600 transition-colors" title="Cambiar tema claro/oscuro">
+                        <i id="theme-icon" class="fa-solid fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- ==========================================
+             SECCIÓN 1: CUADRÍCULA DEL ABECEDARIO (28 LETRAS)
+             ========================================== -->
+        <section id="section-abecedario" class="space-y-6">
+            <!-- Banner informativo de reglas básicas -->
+            <div class="bg-white/90 dark:bg-slate-800/90 backdrop-blur rounded-2xl p-4 sm:p-5 shadow-md border border-andalus-500/20 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2 text-andalus-800 dark:text-gold-400 font-semibold">
+                        <i class="fa-solid fa-compass"></i>
+                        <span>Claves del Alifato Árabe:</span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                        El árabe se lee y escribe de <strong>derecha a izquierda (<span dir="rtl">←</span>)</strong>. Consta de <strong>28 letras</strong> consonánticas que cambian ligeramente de forma según vayan al principio, en medio o al final de la palabra. Haz clic en cualquier tarjeta para ver sus 4 formas y escuchar su sonido.
+                    </p>
+                </div>
+
+                <!-- Filtros rápidos -->
+                <div class="flex flex-wrap items-center gap-2 shrink-0 w-full lg:w-auto">
+                    <span class="text-xs font-medium text-slate-500 dark:text-slate-400 mr-1">Filtrar:</span>
+                    <button onclick="filterLetters('all')" id="filter-all" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-andalus-700 text-white shadow-sm transition">
+                        Todas (28)
+                    </button>
+                    <button onclick="filterLetters('non-connecting')" id="filter-non-connecting" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-andalus-100 transition">
+                        No conectan a izq. (6)
+                    </button>
+                    <button onclick="filterLetters('solar')" id="filter-solar" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-amber-100 transition">
+                        ☀️ Solares (14)
+                    </button>
+                    <button onclick="filterLetters('lunar')" id="filter-lunar" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-indigo-100 transition">
+                        🌙 Lunares (14)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Nota de dirección de lectura -->
+            <div class="flex justify-between items-center px-1">
+                <div class="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                    <span>Letras con estrella dorada tienen sonidos nuevos para hispanohablantes</span>
+                </div>
+                <div class="text-xs font-semibold text-andalus-700 dark:text-gold-400 flex items-center gap-1.5 bg-andalus-50 dark:bg-slate-800 px-3 py-1 rounded-full border border-andalus-200 dark:border-slate-700">
+                    <span>Orden tradicional (Derecha a Izquierda)</span>
+                    <i class="fa-solid fa-arrow-left"></i>
+                </div>
+            </div>
+
+            <!-- Cuadrícula de letras (dir="rtl" para respetar el flujo derecha a izquierda del árabe) -->
+            <div id="letters-grid" dir="rtl" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3.5 sm:gap-4">
+                <!-- Generado dinámicamente por JS -->
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SECCIÓN 2: GUÍA RÁPIDA DE VOCALES BREVES (HARAKAT)
+             ========================================== -->
+        <section id="section-harakat" class="hidden space-y-6">
+            <div class="bg-white/95 dark:bg-slate-800/95 rounded-2xl p-6 shadow-md border border-andalus-500/20">
+                <div class="max-w-3xl">
+                    <h2 class="text-2xl font-bold text-andalus-900 dark:text-gold-400 flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-gold-500"></i>
+                        <span>Las Vocales Breves en Árabe (Harakat - الحَرَكَات)</span>
+                    </h2>
+                    <p class="mt-2 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                        En árabe, las 28 letras del abecedario son técnicamente consonantes (aunque <em>Alif</em>, <em>Waw</em> y <em>Ya</em> también funcionan como vocales largas). Para indicar las vocales cortas <strong>A, I, U</strong> o la ausencia de vocal, se colocan pequeños signos diacríticos encima o debajo de la letra llamados <strong>Harakat</strong> ("movimientos").
+                    </p>
+                </div>
+
+                <!-- Tarjetas explicativas de las 4 Harakat -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+                    <!-- Fatha -->
+                    <div class="bg-sand-50 dark:bg-slate-900/80 p-5 rounded-xl border-2 border-amber-400/50 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start">
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300">Sonido "A"</span>
+                                <span class="text-xs text-slate-400">Encima de la letra</span>
+                            </div>
+                            <div class="my-4 text-center font-arabic text-6xl text-andalus-800 dark:text-gold-400 select-none">
+                                بَ
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-800 dark:text-white">Fatha (فَتْحَة)</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                                Una pequeña raya diagonal <strong>encima</strong> de la letra. Añade el sonido de la vocal <strong>"a"</strong> corta (ej. <em>Ba</em>).
+                            </p>
+                        </div>
+                        <button onclick="speakArabic('بَ')" class="mt-4 w-full py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-volume-high"></i> Escuchar "Ba" (بَ)
+                        </button>
+                    </div>
+
+                    <!-- Kasra -->
+                    <div class="bg-sand-50 dark:bg-slate-900/80 p-5 rounded-xl border-2 border-teal-400/50 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start">
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300">Sonido "I"</span>
+                                <span class="text-xs text-slate-400">Debajo de la letra</span>
+                            </div>
+                            <div class="my-4 text-center font-arabic text-6xl text-andalus-800 dark:text-gold-400 select-none">
+                                بِ
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-800 dark:text-white">Kasra (كَسْرَة)</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                                Una pequeña raya diagonal <strong>debajo</strong> de la letra. Añade el sonido de la vocal <strong>"i"</strong> corta (ej. <em>Bi</em>).
+                            </p>
+                        </div>
+                        <button onclick="speakArabic('بِ')" class="mt-4 w-full py-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-volume-high"></i> Escuchar "Bi" (بِ)
+                        </button>
+                    </div>
+
+                    <!-- Damma -->
+                    <div class="bg-sand-50 dark:bg-slate-900/80 p-5 rounded-xl border-2 border-blue-400/50 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start">
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300">Sonido "U"</span>
+                                <span class="text-xs text-slate-400">Encima de la letra</span>
+                            </div>
+                            <div class="my-4 text-center font-arabic text-6xl text-andalus-800 dark:text-gold-400 select-none">
+                                بُ
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-800 dark:text-white">Damma (ضَمَّة)</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                                Un pequeño lazo similar a una coma (o mini letra Waw) <strong>encima</strong> de la letra. Da el sonido <strong>"u"</strong> (ej. <em>Bu</em>).
+                            </p>
+                        </div>
+                        <button onclick="speakArabic('بُ')" class="mt-4 w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-volume-high"></i> Escuchar "Bu" (بُ)
+                        </button>
+                    </div>
+
+                    <!-- Sukun -->
+                    <div class="bg-sand-50 dark:bg-slate-900/80 p-5 rounded-xl border-2 border-purple-400/50 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start">
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300">Sin vocal</span>
+                                <span class="text-xs text-slate-400">Círculo encima</span>
+                            </div>
+                            <div class="my-4 text-center font-arabic text-6xl text-andalus-800 dark:text-gold-400 select-none">
+                                أَبْ
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-800 dark:text-white">Sukun (سُكُون)</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                                Un circulito encima de la letra indica que la consonante se pronuncia <strong>sin vocal</strong> cerrando la sílaba (ej. <em>Ab</em>).
+                            </p>
+                        </div>
+                        <button onclick="speakArabic('أَبْ')" class="mt-4 w-full py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-volume-high"></i> Escuchar "Ab" (أَبْ)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Laboratorio Interactivo de Harakat -->
+                <div class="mt-8 bg-gradient-to-br from-andalus-900 to-andalus-950 text-white rounded-2xl p-6 shadow-xl border border-gold-500/30">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-andalus-800 pb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-gold-400 flex items-center gap-2">
+                                <i class="fa-solid fa-sliders"></i>
+                                <span>Laboratorio Interactivo de Pronunciación con Vocales</span>
+                            </h3>
+                            <p class="text-xs sm:text-sm text-andalus-100/80">
+                                Selecciona cualquiera de las 28 letras para ver y escuchar cómo suena con cada vocal breve.
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-2 w-full md:w-auto">
+                            <label for="harakat-letter-select" class="text-xs font-semibold text-gold-300 shrink-0">Elegir letra:</label>
+                            <select id="harakat-letter-select" onchange="updateHarakatLab()" class="w-full md:w-56 bg-andalus-800 text-white border border-gold-500/40 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gold-400">
+                                <!-- Opciones generadas por JS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Resultados dinámicos de la letra seleccionada -->
+                    <div id="harakat-lab-display" class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
+                        <!-- Generado por JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SECCIÓN 3: MODO PIZARRA DE PRÁCTICA (CANVAS)
+             ========================================== -->
+        <section id="section-pizarra" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Panel lateral de control de Pizarra -->
+                <div class="bg-white/95 dark:bg-slate-800/95 rounded-2xl p-6 shadow-md border border-andalus-500/20 flex flex-col justify-between space-y-5">
+                    <div class="space-y-4">
+                        <div>
+                            <h2 class="text-xl font-bold text-andalus-900 dark:text-gold-400 flex items-center gap-2">
+                                <i class="fa-solid fa-pen-nib text-gold-500"></i>
+                                <span>Pizarra de Caligrafía</span>
+                            </h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                Practica el trazo con el ratón o tu dedo. Recuerda empezar el trazo principal de <strong>derecha a izquierda</strong> y colocar los puntos al final.
+                            </p>
+                        </div>
+
+                        <!-- Selector de letra para practicar -->
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                                1. Selecciona la letra:
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <button onclick="changeCanvasLetter(-1)" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-andalus-100 text-slate-700 dark:text-slate-200 transition" title="Letra anterior">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </button>
+                                <select id="canvas-letter-select" onchange="selectCanvasLetter(this.value)" class="flex-grow bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-andalus-500">
+                                    <!-- Generado por JS -->
+                                </select>
+                                <button onclick="changeCanvasLetter(1)" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-andalus-100 text-slate-700 dark:text-slate-200 transition" title="Siguiente letra">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Selector de forma (Aislada, Inicial, Media, Final) -->
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                                2. Posición a trazar:
+                            </label>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2">
+                                <button onclick="setCanvasForm('isolated')" id="form-btn-isolated" class="canvas-form-btn py-2 px-3 rounded-xl text-xs font-semibold bg-andalus-700 text-white shadow">
+                                    Aislada
+                                </button>
+                                <button onclick="setCanvasForm('initial')" id="form-btn-initial" class="canvas-form-btn py-2 px-3 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+                                    Inicial (Derecha)
+                                </button>
+                                <button onclick="setCanvasForm('medial')" id="form-btn-medial" class="canvas-form-btn py-2 px-3 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+                                    Media (Centro)
+                                </button>
+                                <button onclick="setCanvasForm('final')" id="form-btn-final" class="canvas-form-btn py-2 px-3 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+                                    Final (Izquierda)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Ajustes de Pincel -->
+                        <div class="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-700">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Color de tinta:</span>
+                                <div class="flex gap-2">
+                                    <button onclick="setBrushColor('#0f766e')" class="w-6 h-6 rounded-full bg-andalus-700 ring-2 ring-offset-2 ring-andalus-600"></button>
+                                    <button onclick="setBrushColor('#d97706')" class="w-6 h-6 rounded-full bg-gold-600 hover:scale-110 transition"></button>
+                                    <button onclick="setBrushColor('#1e293b')" class="w-6 h-6 rounded-full bg-slate-800 hover:scale-110 transition"></button>
+                                    <button onclick="setBrushColor('#e11d48')" class="w-6 h-6 rounded-full bg-rose-600 hover:scale-110 transition"></button>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Grosor del cálamo:</span>
+                                <input type="range" id="brush-size" min="6" max="24" value="14" onchange="updateBrushSize(this.value)" class="w-32 accent-andalus-600">
+                            </div>
+                        </div>
+
+                        <!-- Tarjeta resumen de la letra actual -->
+                        <div id="canvas-letter-info" class="p-3.5 rounded-xl bg-sand-100 dark:bg-slate-900 border border-gold-400/30 text-xs space-y-1">
+                            <!-- Llenado por JS -->
+                        </div>
+                    </div>
+
+                    <!-- Botones de acción de la pizarra -->
+                    <div class="flex gap-2 pt-2">
+                        <button onclick="clearCanvas()" class="flex-1 py-2.5 px-4 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 font-semibold text-sm flex items-center justify-center gap-2 transition">
+                            <i class="fa-solid fa-eraser"></i>
+                            <span>Borrar Pizarra</span>
+                        </button>
+                        <button onclick="speakCurrentCanvasLetter()" class="py-2.5 px-4 rounded-xl bg-gold-500 hover:bg-gold-600 text-slate-950 font-semibold text-sm flex items-center justify-center gap-2 transition" title="Escuchar letra">
+                            <i class="fa-solid fa-volume-high"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Área del Lienzo (Canvas) -->
+                <div class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-6 shadow-md border border-andalus-500/20 flex flex-col">
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                            <span class="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300">Dirección de escritura</span>
+                            <span>Derecha <i class="fa-solid fa-arrow-left mx-1 text-andalus-600"></i> Izquierda</span>
+                        </div>
+                        <label class="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer">
+                            <input type="checkbox" id="toggle-guide" checked onchange="redrawCanvasGuide()" class="rounded accent-andalus-600">
+                            <span>Mostrar plantilla guía</span>
+                        </label>
+                    </div>
+
+                    <!-- Contenedor responsivo del Canvas -->
+                    <div id="canvas-container" class="relative w-full h-80 sm:h-96 bg-sand-50 dark:bg-slate-900 rounded-xl border-2 border-dashed border-andalus-600/40 overflow-hidden shadow-inner flex-grow">
+                        <canvas id="drawingCanvas" class="w-full h-full cursor-crosshair block"></canvas>
+                        <!-- Indicador visual de dirección -->
+                        <div class="pointer-events-none absolute top-3 right-4 text-xs font-bold text-andalus-700/40 dark:text-teal-400/30 flex items-center gap-1 select-none">
+                            <span>INICIO DEL TRAZO</span>
+                            <i class="fa-solid fa-circle-dot"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SECCIÓN 4: MODO QUIZ / PRÁCTICA INTERACTIVA
+             ========================================== -->
+        <section id="section-quiz" class="hidden space-y-6">
+            <div class="max-w-3xl mx-auto bg-white/95 dark:bg-slate-800/95 rounded-2xl p-6 sm:p-8 shadow-lg border border-andalus-500/20">
+                <!-- Cabecera de Estadísticas del Quiz -->
+                <div class="flex flex-wrap justify-between items-center gap-4 pb-6 border-b border-slate-200 dark:border-slate-700">
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-bold text-andalus-900 dark:text-gold-400 flex items-center gap-2">
+                            <i class="fa-solid fa-graduation-cap text-gold-500"></i>
+                            <span>Desafío del Alifato</span>
+                        </h2>
+                        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Pon a prueba tu reconocimiento visual, formas conectadas y oído.</p>
+                    </div>
+
+                    <!-- Marcadores de Puntuación y Racha -->
+                    <div class="flex items-center gap-3">
+                        <div class="bg-amber-50 dark:bg-amber-950/40 border border-amber-300/60 px-3.5 py-2 rounded-xl text-center">
+                            <div class="text-[10px] uppercase font-bold text-amber-700 dark:text-amber-400">Racha</div>
+                            <div class="text-lg font-extrabold text-amber-600 dark:text-amber-300 flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-fire"></i>
+                                <span id="quiz-streak">0</span>
+                            </div>
+                        </div>
+                        <div class="bg-andalus-50 dark:bg-teal-950/40 border border-andalus-300/60 px-3.5 py-2 rounded-xl text-center">
+                            <div class="text-[10px] uppercase font-bold text-andalus-700 dark:text-teal-400">Aciertos</div>
+                            <div class="text-lg font-extrabold text-andalus-800 dark:text-teal-300">
+                                <span id="quiz-score">0</span> / <span id="quiz-total">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Selector de Modo de Pregunta -->
+                <div class="flex flex-wrap items-center justify-between gap-2 my-4">
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Modo de práctica:</span>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button onclick="setQuizMode('mixed')" id="qmode-mixed" class="qmode-btn px-3 py-1 rounded-lg text-xs font-semibold bg-andalus-700 text-white">Mixto</button>
+                        <button onclick="setQuizMode('name')" id="qmode-name" class="qmode-btn px-3 py-1 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-700">Identificar Letra</button>
+                        <button onclick="setQuizMode('forms')" id="qmode-forms" class="qmode-btn px-3 py-1 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-700">Formas (Inicial/Media/Final)</button>
+                        <button onclick="setQuizMode('audio')" id="qmode-audio" class="qmode-btn px-3 py-1 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-700">Oído / Audio</button>
+                    </div>
+                </div>
+
+                <!-- Área de la Pregunta Activa -->
+                <div id="quiz-container" class="my-6 text-center space-y-6">
+                    <div class="bg-sand-100 dark:bg-slate-900 rounded-2xl p-6 sm:p-8 border border-gold-500/30 shadow-inner min-h-[190px] flex flex-col items-center justify-center">
+                        <span id="quiz-question-badge" class="px-3 py-1 rounded-full text-xs font-semibold bg-andalus-100 dark:bg-slate-800 text-andalus-800 dark:text-gold-400 mb-3">
+                            Pregunta
+                        </span>
+                        <h3 id="quiz-question-text" class="text-base sm:text-lg font-semibold text-slate-700 dark:text-slate-200 mb-3">
+                            ¿Cuál de estas letras corresponde a...?
+                        </h3>
+                        <!-- Estímulo principal (letra gigante o botón de audio) -->
+                        <div id="quiz-stimulus" class="my-2">
+                            <!-- Rellenado dinámicamente -->
+                        </div>
+                    </div>
+
+                    <!-- Opciones de Respuesta (4 botones) -->
+                    <div id="quiz-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <!-- Generado por JS -->
+                    </div>
+
+                    <!-- Retroalimentación y botón Siguiente -->
+                    <div id="quiz-feedback" class="hidden p-4 rounded-xl text-sm font-medium flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <div id="quiz-feedback-text" class="text-left"></div>
+                        <button onclick="nextQuizQuestion()" class="px-5 py-2.5 rounded-xl bg-andalus-800 hover:bg-andalus-900 text-white font-semibold text-xs sm:text-sm shrink-0 flex items-center gap-2 shadow">
+                            <span>Siguiente pregunta</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==========================================
+         MODAL DETALLADO DE LETRA (4 FORMAS, PRONUNCIACIÓN, EJEMPLO)
+         ========================================== -->
+    <div id="letter-modal" class="fixed inset-0 z-50 hidden bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto" onclick="closeModalOnOutsideClick(event)">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-3xl shadow-2xl border-2 border-gold-500/50 overflow-hidden my-8 animate-fadeIn" onclick="event.stopPropagation()">
+            <!-- Cabecera del Modal -->
+            <div class="bg-gradient-to-r from-andalus-900 via-andalus-800 to-andalus-900 text-white p-5 sm:p-6 relative">
+                <button onclick="closeLetterModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition" title="Cerrar (Esc)">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+
+                <div class="flex flex-col sm:flex-row items-center gap-5">
+                    <!-- Letra Gigante -->
+                    <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-sand-50 dark:bg-slate-800 text-andalus-900 dark:text-gold-400 flex items-center justify-center font-arabic text-6xl sm:text-7xl shadow-lg border-2 border-gold-400 shrink-0 select-none" id="modal-letter-char">
+                        أ
+                    </div>
+
+                    <div class="text-center sm:text-left space-y-1.5 flex-grow">
+                        <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                            <span id="modal-letter-order" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-gold-500 text-andalus-950">Letra #1</span>
+                            <span id="modal-letter-type" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/15 text-gold-200">🌙 Lunar</span>
+                            <span id="modal-letter-connect" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/15 text-teal-200">Conecta ambos lados</span>
+                        </div>
+                        <h2 class="text-2xl sm:text-3xl font-bold flex items-center justify-center sm:justify-start gap-3">
+                            <span id="modal-letter-name">Alif</span>
+                            <span id="modal-letter-arabic-name" class="text-gold-300 font-arabic text-xl font-normal">أَلِف</span>
+                        </h2>
+                        <p id="modal-letter-short-sound" class="text-sm text-andalus-100">Sonido aproximado: Vocal soporte / A larga</p>
+                    </div>
+
+                    <!-- Botón grande de escuchar -->
+                    <button id="modal-speak-btn" onclick="speakModalLetter()" class="px-4 py-3 rounded-2xl bg-gold-500 hover:bg-gold-400 text-andalus-950 font-bold text-sm shadow-lg flex items-center gap-2 transition shrink-0">
+                        <i class="fa-solid fa-volume-high text-lg"></i>
+                        <span>Escuchar</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cuerpo del Modal -->
+            <div class="p-5 sm:p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+                <!-- 1. Las 4 Formas de Escritura (Ordenadas de Derecha a Izquierda como se escribe) -->
+                <div>
+                    <div class="flex justify-between items-center mb-2.5">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-andalus-800 dark:text-gold-400 flex items-center gap-2">
+                            <i class="fa-solid fa-shapes"></i>
+                            <span>Las 4 formas según su posición en la palabra</span>
+                        </h3>
+                        <span class="text-[11px] text-slate-400">Lectura: Derecha ← Izquierda</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center" dir="rtl">
+                        <!-- Aislada -->
+                        <div class="bg-sand-50 dark:bg-slate-800/90 p-3 rounded-2xl border border-slate-200 dark:border-slate-700">
+                            <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">Aislada</span>
+                            <div id="modal-form-isolated" class="font-arabic text-5xl text-andalus-900 dark:text-white py-2 select-none">أ</div>
+                            <span class="text-[10px] text-slate-400">Sola</span>
+                        </div>
+                        <!-- Inicial -->
+                        <div class="bg-sand-50 dark:bg-slate-800/90 p-3 rounded-2xl border border-slate-200 dark:border-slate-700">
+                            <span class="text-[11px] font-semibold text-teal-600 dark:text-teal-400 block mb-1">Inicial (1ª)</span>
+                            <div id="modal-form-initial" class="font-arabic text-5xl text-andalus-900 dark:text-white py-2 select-none">أ</div>
+                            <span class="text-[10px] text-slate-400">Empieza palabra</span>
+                        </div>
+                        <!-- Media -->
+                        <div class="bg-sand-50 dark:bg-slate-800/90 p-3 rounded-2xl border border-slate-200 dark:border-slate-700">
+                            <span class="text-[11px] font-semibold text-amber-600 dark:text-amber-400 block mb-1">Media (2ª)</span>
+                            <div id="modal-form-medial" class="font-arabic text-5xl text-andalus-900 dark:text-white py-2 select-none">ـأ</div>
+                            <span class="text-[10px] text-slate-400">En el centro</span>
+                        </div>
+                        <!-- Final -->
+                        <div class="bg-sand-50 dark:bg-slate-800/90 p-3 rounded-2xl border border-slate-200 dark:border-slate-700">
+                            <span class="text-[11px] font-semibold text-purple-600 dark:text-purple-400 block mb-1">Final (3ª)</span>
+                            <div id="modal-form-final" class="font-arabic text-5xl text-andalus-900 dark:text-white py-2 select-none">ـأ</div>
+                            <span class="text-[10px] text-slate-400">Cierra palabra</span>
+                        </div>
+                    </div>
+
+                    <!-- Aviso especial si es una de las 6 letras que no conectan a la izquierda -->
+                    <div id="modal-nonconnect-alert" class="hidden mt-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300/60 text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2.5">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
+                        <div>
+                            <strong>¡Regla de conexión!</strong> Esta es una de las <strong>6 letras que NUNCA se unen por la izquierda</strong> (con la letra siguiente). Solo se une con la letra anterior (por la derecha), dejando un pequeño espacio después de ella.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Guía detallada de Pronunciación para Hispanohablantes -->
+                <div class="bg-andalus-50/70 dark:bg-slate-800/60 p-4 rounded-2xl border border-andalus-200 dark:border-slate-700 space-y-2">
+                    <h3 class="text-sm font-bold text-andalus-900 dark:text-gold-400 flex items-center gap-2">
+                        <i class="fa-solid fa-comment-dots text-andalus-600 dark:text-gold-400"></i>
+                        <span>Cómo pronunciarla desde el español</span>
+                    </h3>
+                    <p id="modal-pronunciation-guide" class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+                        Explicación detallada...
+                    </p>
+                </div>
+
+                <!-- 3. Ejemplo de Palabra en Árabe + Significado -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-sand-100/80 dark:bg-slate-800 p-4 rounded-2xl border border-gold-400/30 flex items-center justify-between">
+                        <div>
+                            <span class="text-[11px] font-bold uppercase text-slate-400 block">Palabra de ejemplo</span>
+                            <div id="modal-example-arabic" class="font-arabic text-4xl text-andalus-900 dark:text-gold-300 my-1">أَسَد</div>
+                            <div class="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                                <span id="modal-example-translit" class="italic text-andalus-700 dark:text-teal-400">Asad</span>
+                                — <span id="modal-example-meaning">León</span>
+                            </div>
+                        </div>
+                        <button onclick="speakModalWord()" class="w-11 h-11 rounded-xl bg-andalus-700 hover:bg-andalus-800 text-white flex items-center justify-center shadow transition" title="Escuchar palabra de ejemplo">
+                            <i class="fa-solid fa-volume-high"></i>
+                        </button>
+                    </div>
+
+                    <!-- Explicación Solar / Lunar -->
+                    <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col justify-center">
+                        <span class="text-[11px] font-bold uppercase text-slate-400 block mb-1">Con el artículo "Al-" (الـ)</span>
+                        <p id="modal-sun-moon-desc" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Descripción solar o lunar...
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Pie del Modal: Navegación entre letras y acceso directo a Pizarra -->
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+                    <div class="flex gap-2">
+                        <button onclick="navigateModalLetter(-1)" class="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-semibold flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-arrow-right"></i> Anterior
+                        </button>
+                        <button onclick="navigateModalLetter(1)" class="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-semibold flex items-center gap-1.5 transition">
+                            Siguiente <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                    </div>
+
+                    <button onclick="openLetterInCanvas()" class="px-4 py-2 rounded-xl bg-andalus-700 hover:bg-andalus-800 text-white text-xs font-semibold flex items-center gap-2 shadow transition">
+                        <i class="fa-solid fa-pen-nib"></i>
+                        <span>Practicar trazo en Pizarra</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PIE DE PÁGINA -->
+    <footer class="bg-andalus-950 text-andalus-100/70 text-xs py-5 border-t border-gold-500/20 mt-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <div>
+                <span class="font-semibold text-gold-400">Alifato Interactivo</span> — Herramienta educativa de lengua y caligrafía árabe para hispanohablantes.
+            </div>
+            <div class="flex items-center gap-4">
+                <span>Síntesis de voz: Web Speech API (<code class="text-gold-300">ar-SA</code>)</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ==========================================
+         LÓGICA JAVASCRIPT Y BASE DE DATOS DE LAS 28 LETRAS
+         ========================================== -->
+    <script>
+        /**
+         * BASE DE DATOS COMPLETA DEL ALIFATO ÁRABE (28 LETRAS)
+         * Incluye formas aislada, inicial, media y final, reglas de conexión,
+         * clasificación solar/lunar, fonética para hispanohablantes y ejemplos.
+         */
+        const ARABIC_LETTERS = [
+            {
+                id: 1,
+                char: 'ا',
+                displayIsolated: 'أ / ا',
+                name: 'Alif',
+                arabicName: 'أَلِف',
+                shortSound: 'A larga / Soporte vocal',
+                isUniqueSound: false,
+                connectsLeft: false,
+                type: 'lunar',
+                forms: { isolated: 'ا', initial: 'ا', medial: 'ـا', final: 'ـا' },
+                pronunciation: 'Por sí sola alarga la vocal "a" (aa). Cuando lleva una pequeña "Hamza" encima (أ) o debajo (إ), suena como una breve parada en la garganta antes de la vocal: "a", "i", "u".',
+                wordArabic: 'أَسَد',
+                wordTranslit: 'Asad',
+                wordMeaning: 'León',
+                ttsPhonetic: 'أَ'
+            },
+            {
+                id: 2,
+                char: 'ب',
+                displayIsolated: 'ب',
+                name: 'Ba',
+                arabicName: 'بَاء',
+                shortSound: 'B española',
+                isUniqueSound: false,
+                connectsLeft: true,
+                type: 'lunar',
+                forms: { isolated: 'ب', initial: 'بـ', medial: 'ـبـ', final: 'ـب' },
+                pronunciation: 'Exactamente igual que la "b" en español en palabras como "barco" o "bueno". Tiene un único punto debajo de la barca.',
+                wordArabic: 'بَيْت',
+                wordTranslit: 'Bayt',
+                wordMeaning: 'Casa',
+                ttsPhonetic: 'بَ'
+            },
+            {
+                id: 3,
+                char: 'ت',
+                displayIsolated: 'ت',
+                name: 'Ta',
+                arabicName: 'تَاء',
+                shortSound: 'T suave',
+                isUniqueSound: false,
+                connectsLeft: true,
+                type: 'solar',
+                forms: { isolated: 'ت', initial: 'تـ', medial: 'ـتـ', final: 'ـت' },
+                pronunciation: 'Igual que la "t" española en "taza" o "tomate", apoyando la punta de la lengua en los dientes superiores. Tiene dos puntos arriba.',
+                wordArabic: 'تَمْر',
+                wordTranslit: 'Tamr',
+                wordMeaning: 'Dátil',
+                ttsPhonetic: 'تَ'
+            },
+            {
+                id: 4,
+                char: 'ث',
+                displayIsolated: 'ث',
+                name: 'Tha',
+                arabicName: 'ثَاء',
+                shortSound: 'Z de España / TH inglesa',
+                isUniqueSound: false,
+                connectsLeft: true,
+                type: 'solar',
+                forms: { isolated: 'ث', initial: 'ثـ', medial: 'ـثـ', final: 'ـث' },
+                pronunciation: 'Suena como la "z" o "c" del español peninsular ("zapato", "cielo") o la "th" inglesa en "think". Coloca la punta de la lengua entre los dientes. Tiene tres puntos arriba.',
+                wordArabic: 'ثَلْج',
+                wordTranslit: 'Thaly',
+                wordMeaning: 'Nieve / Hielo',
+                ttsPhonetic: 'ثَ'
+            },
+            {
+                id: 5,
+                char: 'ج',
+                displayIsolated: 'ج',
+                name: 'Yim',
+                arabicName: 'جِيم',
+                shortSound: 'J inglesa / Y fuerte',
+                isUniqueSound: true,
+                connectsLeft: true,
+                type: 'lunar',
+                forms: { isolated: 'ج', initial: 'جـ', medial: 'ـجـ', final: 'ـج' },
+                pronunciation: 'En árabe estándar suena como la "j" inglesa en "Jack" o "jumbo" (o como la "y" fuerte rioplatense/española en "yo"). Tiene un punto en su interior o debajo.',
+                wordArabic: 'جَمَل',
+                wordTranslit: 'Yamal',
+                wordMeaning: 'Camello',
+                ttsPhonetic: 'جَ'
+            },
+            {
+                id: 6,
+                char: 'ح',
+                displayIsolated: 'ح',
+                name: 'Ha (faríngea)',
+                arabicName: 'حَاء',
+                shortSound: 'H aspirada profunda',
+                isUniqueSound: true,
+                connectsLeft: true,
+                type: 'lunar',
+                forms: { isolated: 'ح', initial: 'حـ', medial: 'ـحـ', final: 'ـح' },
+                pronunciation: '¡Sonido clave! No existe en español. Imagina que estás echando vaho para limpiar tus gafas con la boca abierta ("hhh"), contrayendo ligeramente el fondo de la garganta sin que raspe como la J. No lleva ningún punto.',
+                wordArabic: 'حُبّ',
+                wordTranslit: 'Hubb',
+                wordMeaning: 'Amor',
+                ttsPhonetic: 'حَ'
+            },
+            {
+                id: 7,
+                char: 'خ',
+                displayIsolated: 'خ',
+                name: 'Ja',
+                arabicName: 'خَاء',
+                shortSound: 'J española fuerte',
+                isUniqueSound: false,
+                connectsLeft: true,
+                type: 'lunar',
+                forms: { isolated: 'خ', initial: 'خـ', medial: 'ـخـ', final: 'ـخ' },
+                pronunciation: 'Muy fácil para hispanohablantes: suena igual que la "j" fuerte de España en "jamón" o "jota", con fricción en el velo del paladar. Lleva un punto encima.',
+                wordArabic: 'خُبْز',
+                wordTranslit: 'Jubz',
+                wordMeaning: 'Pan',
+                ttsPhonetic: 'خَ'
+            },
+            {
+                id: 8,
+                char: 'د',
+                displayIsolated: 'د',
+                name: 'Dal',
+                arabicName: 'دَال',
+                shortSound: 'D española inicial',
+                isUniqueSound: false,
+                connectsLeft: false,
+                type: 'solar',
+                forms: { isolated: 'د', initial: 'د', medial: 'ـد', final: 'ـد' },
+                pronunciation: 'Como la "d" española al principio de palabra ("dedo", "donde"), limpia y firme.',
+                wordArabic: 'دَار',
+                wordTranslit: 'Dar',
+                wordMeaning: 'Casa / Hogar',
+                ttsPhonetic: 'دَ'
+            },
+            {
+                id: 9,
+                char: 'ذ',
+                displayIsolated: 'ذ',
+                name: 'Dhal',
+                arabicName: 'ذَال',
+                shortSound: 'D suave (como en "hada")',
+                isUniqueSound: false,
+                connectsLeft: false,
+                type: 'solar',
+                forms: { isolated: 'ذ', initial: 'ذ', medial: 'ـذ', final: 'ـذ' },
+                pronunciation: 'Suena exactamente como la "d" suave española cuando va entre vocales (como la segunda "d" en "dedo", "nada" o el inglés "this"), sacando levemente la punta de la lengua entre los dientes.',
+                wordArabic: 'ذَهَب',
+                wordTranslit: 'Dhahab',
+                wordMeaning: 'Oro',
+                ttsPhonetic: 'ذَ'
+            },
+            {
+                id: 10,
+                char: 'ر',
+                displayIsolated: 'ر',
+                name: 'Ra',
+                arabicName: 'رَاء',
+                shortSound: 'R vibrante española',
+                isUniqueSound: false,
+                connectsLeft: false,
+                type: 'solar',
+                forms: { isolated: 'ر', initial: 'ر', medial: 'ـر', final: 'ـر' },
+                pronunciation: 'Idéntica a la "r" o "rr" vibrante del español en "rosa" o "carro".',
+                wordArabic: 'رُمَّان',
+                wordTranslit: 'Rumman',
+                wordMeaning: 'Granada (fruta)',
+                ttsPhonetic: 'رَ'
+            },
+            {
+                id: 11,
+                char: 'ز',
+                displayIsolated: 'ز',
+                name: 'Zay',
+                arabicName: 'زَاي',
+                shortSound: 'Z zumbada (abeja)',
+                isUniqueSound: true,
+                connectsLeft: false,
+                type: 'solar',
+                forms: { isolated: 'ز', initial: 'ز', medial: 'ـز', final: 'ـز' },
+                pronunciation: 'Es una "s" sonora haciendo vibrar las cuerdas vocales, como el zumbido de una abeja ("zzzz") o la "z" del inglés/francés en "zoo".',
+                wordArabic: 'زَيْت',
+                wordTranslit: 'Zayt',
+                wordMeaning: 'Aceite',
+                ttsPhonetic: 'زَ'
+            },
+            {
+                id: 12,
+                char: 'س',
+                displayIsolated: 'س',
+                name: 'Sin',
+                arabicName: 'سِين',
+                shortSound: 'S española',
+                isUniqueSound: false,
+                connectsLeft: true,
+                type: 'solar',
+                forms: { isolated: 'س', initial: 'سـ', medial: 'ـسـ', final: 'ـس' },
+                pronunciation: 'Exactamente como la "s" del español en "sol" o "sopa". Se reconoce por sus tres pequeños dientes.',
+                wordArabic: 'سَلَام',
+                wordTranslit: 'Salam',
+                wordMeaning: 'Paz',
+                ttsPhonetic: 'سَ'
+            },
+            {
+                id: 13,
+                char: 'ش',
+                displayIsolated: 'ش',
+                name: 'Shin',
+                arabicName: 'شِين',
+                shortSound: 'SH inglesa ("shhh")',
+                isUniqueSound: false,
+                connectsLeft: true,
+                type: 'solar',
+                forms: { isolated: 'ش', initial: 'شـ', medial: 'ـشـ', final: 'ـش' },
+                pronunciation: 'Suena como cuando pides silencio ("shhh") o como la "sh" en inglés ("show", "Shakira"). Es igual que la letra Sin pero con tres puntos encima.',
+                wordArabic: 'شَمْس',
+                wordTranslit: 'Shams',
+                wordMeaning: 'Sol',
+                ttsPhonetic: 'شَ'
+            },
+            {
+                id: 14,
+                char: 'ص',
+                displayIsolated: 'ص',
+                name: 'Sad (enfática)',
+                arabicName: 'صَاد',
+                shortSound: 'S gruesa / enfática',
+                isUniqueSound: true,
+                connectsLeft: true,
+                type: 'solar',
+                forms: { isolated: 'ص', initial: 'صـ', medial: 'ـصـ', final: 'ـص' },
+                pronunciation: 'Es la hermana grave y profunda de la "S". Pronuncia una "s" pero ahuecando la boca y bajando la parte posterior de la lengua hacia la garganta, haciendo que la vocal siguiente suene más grave y oscura.',
+                wordArabic: 'صَبَاح',
+                wordTranslit: 'Sabah',
+                wordMeaning: 'Mañana',
+                ttsPhonetic: 'صَ'
+            },
+            {
+                id: 15,
+                char: 'ض',
+                displayIsolated: 'ض',
+                name: 'Dad (enfática)',
+                arabicName: 'ضَاد',
+                shortSound: 'D gruesa / enfática',
+                isUniqueSound: true,
+                connectsLeft: true,
+                type: 'solar',
+                forms: { isolated: 'ض', initial: 'ضـ', medial: 'ـضـ', final: 'ـض' },
+                pronunciation: 'Tan característica que al árabe se le llama "la lengua de la Dad". Es una "D" grave y resonante pronunciada ahuecando el paladar y apoyando los lados de la lengua contra los molares superiores.',
+                wordArabic: 'ضَوْء',
+                wordTranslit: 'Daw',
+                wordMeaning: 'Luz',
+                ttsPhonetic: 'ضَ'
+            },
+            {
+                id: 16,
+                char: 'ط',
+                displayIsolated: 'ط',
+                name: 'Ta enfática',
+                arabicName: 'طَاء',
+                shortSound: 'T gruesa / enfática',
+                isUniqueSound: true,
+                connectsLeft: true,
+                type: 'solar',
+                forms: { isolated: 'ط', initial: 'طـ', medial: 'ـطـ', final: 'ـط' },
+                pronunciation: 'Es una "T" fuerte y grave. A diferencia de la Ta normal (ت), se pronuncia con el dorso de la lengua retraído y la cavidad bucal hueca, dando un sonido seco y profundo.',
+                wordArabic: 'طَالِب',
+                wordTranslit: 'Talib',
+                wordMeaning: 'Estudiante',
+                ttsPhonetic: 'طَ'
+            },
+            {
+                id: 17,
+                char: 'ظ',
+                displayIsolated: 'ظ',
+                name: 'Za enfática',
+                arabicName: 'ظَاء',
+                shortSound: 'Dhal gruesa / enfática',
+                isUniqueSound: true,
+                connectsLeft: true,
+                type: 'solar',
+                forms: { isolated: 'ظ', initial: 'ظـ', medial: 'ـظـ', final: 'ـظ' },
+                pronunciation: 'Es la versión profunda y enfática de la letra Dhal (ذ). Coloca la punta de la lengua entre los dientes como en "dedo", pero ahueca el fondo de la boca para que suene grave.',
+                wordArabic: 'ظِلّ',
+                wordTranslit: 'Zill',
+                wordMeaning: 'Sombra',
+                ttsPhonetic: 'ظَ'
+            },
+            {
+                id: 18,
+                char: 'ع',
+                displayIsolated: 'ع',
+                name: 'Ayn',
+                arabicName: 'عَيْن',
+                shortSound: 'Sonido gutural profundo',
+                isUniqueSound: true,
+                connectsLeft: true,
+                type: 'lunar',
+                forms: { isolated: 'ع', initial: 'عـ', medial: 'ـعـ', final: 'ـع' },
+                pronunciation: '¡La letra más famosa del árabe! Es una consonante pronunciada comprimiendo los músculos de la faringe (garganta media) mientras haces vibrar las cuerdas vocales, similar a cuando el médico te pide decir "aaa" bajando la lengua.',
+                wordArabic: 'عَيْن',
+                wordTranslit: 'Ayn',
+                wordMeaning: 'Ojo / Manantial',
+                ttsPhonetic: 'عَ'
+            },
+            {
+                id: 19,
+                char: 'غ',
+                displayIsolated: 'غ',
+                name: 'Ghayn',
+                arabicName: 'غَيْن',
+                shortSound: 'G suave / R francesa',
+                isUniqueSound: true,
+                connectsLeft: true,
+                type: 'lunar',
+                forms: { isolated: 'غ', initial: 'غـ', medial: 'ـغـ', final: 'ـغ' },
+                pronunciation: 'Suena como hacer gárgaras suaves con agua, como la "r" francesa en "Paris" o una "g" española muy fricativa entre vocales ("hago", "agua").',
+                wordArabic: 'غَيْم',
+                wordTranslit: 'Ghaym',
+                wordMeaning: 'Nube',
+                ttsPhonetic: 'غَ'
+            },
+            {
+                id: 20,
+                char: 'ف',
+                displayIsolated: 'ف',
+                name: 'Fa',
+                arabicName: 'فَاء',
+                shortSound: 'F española',
+                isUniqueSound: false,
+                connectsLeft: true,
+                type: 'lunar',
+                forms: { isolated: 'ف', initial: 'فـ', medial: 'ـفـ', final: 'ـف' },
+                pronunciation: 'Idéntica a la "f" en español ("fuego", "flor"). Tiene un bucle y un solo punto encima.',
+                wordArabic: 'فِيل',
+                wordTranslit: 'Fil',
+                wordMeaning: 'Elefante',
+                ttsPhonetic: 'فَ'
+            },
+            {
+                id: 21,
+                char: 'ق',
+                displayIsolated: 'ق',
+                name: 'Qaf',
+                arabicName: 'قَاف',
+                shortSound: 'K profunda (campanilla)',
+                isUniqueSound: true,
+                connectsLeft: true,
+                type: 'lunar',
+                forms: { isolated: 'ق', initial: 'قـ', medial: 'ـقـ', final: 'ـق' },
+                pronunciation: 'Es como una "K", pero pronunciada mucho más atrás en la garganta, tocando la úvula (la campanilla) con la raíz de la lengua. Tiene dos puntos encima.',
+                wordArabic: 'قَمَر',
+                wordTranslit: 'Qamar',
+                wordMeaning: 'Luna',
+                ttsPhonetic: 'قَ'
+            },
+            {
+                id: 22,
+                char: 'ك',
+                displayIsolated: 'ك',
+                name: 'Kaf',
+                arabicName: 'كَاف',
+                shortSound: 'K / C normal ("casa")',
+                isUniqueSound: false,
+                connectsLeft: true,
+                type: 'lunar',
+                forms: { isolated: 'ك', initial: 'كـ', medial: 'ـكـ', final: 'ـك' },
+                pronunciation: 'Igual que nuestra "k" o "c" en "casa", "kilo" o "queso". ¡Ojo! En su forma inicial y media (كـ) cambia su aspecto a una especie de "S" alargada o zigzag.',
+                wordArabic: 'كِتَاب',
+                wordTranslit: 'Kitab',
+                wordMeaning: 'Libro',
+                ttsPhonetic: 'كَ'
+            },
+            {
+                id: 23,
+                char: 'ل',
+                displayIsolated: 'ل',
+                name: 'Lam',
+                arabicName: 'لَام',
+                shortSound: 'L española',
+                isUniqueSound: false,
+                connectsLeft: true,
+                type: 'solar',
+                forms: { isolated: 'ل', initial: 'لـ', medial: 'ـلـ', final: 'ـل' },
+                pronunciation: 'Igual que la "l" española en "luna" o "luz". Nota: Cuando a la Lam le sigue una Alif, forman juntas la ligadura obligatoria "Lam-Alif" (لا) que suena "La".',
+                wordArabic: 'لَيْل',
+                wordTranslit: 'Layl',
+                wordMeaning: 'Noche',
+                ttsPhonetic: 'لَ'
+            },
+            {
+                id: 24,
+                char: 'م',
+                displayIsolated: 'م',
+                name: 'Mim',
+                arabicName: 'مِيم',
+                shortSound: 'M española',
+                isUniqueSound: false,
+                connectsLeft: true,
+                type: 'lunar',
+                forms: { isolated: 'م', initial: 'مـ', medial: 'ـمـ', final: 'ـم' },
+                pronunciation: 'Exactamente igual que la "m" en español ("madre", "mano"). Se distingue por su pequeño círculo cerrado.',
+                wordArabic: 'مَاء',
+                wordTranslit: 'Ma',
+                wordMeaning: 'Agua',
+                ttsPhonetic: 'مَ'
+            },
+            {
+                id: 25,
+                char: 'ن',
+                displayIsolated: 'ن',
+                name: 'Nun',
+                arabicName: 'نُون',
+                shortSound: 'N española',
+                isUniqueSound: false,
+                connectsLeft: true,
+                type: 'solar',
+                forms: { isolated: 'ن', initial: 'نـ', medial: 'ـنـ', final: 'ـن' },
+                pronunciation: 'Igual que la "n" en español ("noche", "nube"). Es un cuenco con un único punto encima.',
+                wordArabic: 'نُور',
+                wordTranslit: 'Nur',
+                wordMeaning: 'Luz / Resplandor',
+                ttsPhonetic: 'نَ'
+            },
+            {
+                id: 26,
+                char: 'ه',
+                displayIsolated: 'ه',
+                name: 'Ha suave',
+                arabicName: 'هَاء',
+                shortSound: 'H inglesa ("hello")',
+                isUniqueSound: true,
+                connectsLeft: true,
+                type: 'lunar',
+                forms: { isolated: 'ه', initial: 'هـ', medial: 'ـهـ', final: 'ـه' },
+                pronunciation: 'Es un soplo de aire muy suave, como la "h" inglesa en "hello" o la "j" suave del sur de España, el Caribe o Colombia. No aprietes la garganta como en la Ha (ح).',
+                wordArabic: 'هَرَم',
+                wordTranslit: 'Haram',
+                wordMeaning: 'Pirámide',
+                ttsPhonetic: 'هَ'
+            },
+            {
+                id: 27,
+                char: 'و',
+                displayIsolated: 'و',
+                name: 'Waw',
+                arabicName: 'وَاو',
+                shortSound: 'W ("huevo") / Vocal U larga',
+                isUniqueSound: false,
+                connectsLeft: false,
+                type: 'lunar',
+                forms: { isolated: 'و', initial: 'و', medial: 'ـو', final: 'ـو' },
+                pronunciation: 'Como consonante suena igual que "hu" en "huevo" o la "w" en "kiwi". También sirve para alargar la vocal "u" (uu).',
+                wordArabic: 'وَرْد',
+                wordTranslit: 'Ward',
+                wordMeaning: 'Rosa / Flores',
+                ttsPhonetic: 'وَ'
+            },
+            {
+                id: 28,
+                char: 'ي',
+                displayIsolated: 'ي',
+                name: 'Ya',
+                arabicName: 'يَاء',
+                shortSound: 'Y suave ("hielo") / Vocal I larga',
+                isUniqueSound: false,
+                connectsLeft: true,
+                type: 'lunar',
+                forms: { isolated: 'ي', initial: 'يـ', medial: 'ـيـ', final: 'ـي' },
+                pronunciation: 'Suena como la "i" o "y" suave en "hielo" o "rey", y también sirve como vocal larga "ii". Tiene dos puntos debajo.',
+                wordArabic: 'يَد',
+                wordTranslit: 'Yad',
+                wordMeaning: 'Mano',
+                ttsPhonetic: 'يَ'
+            }
+        ];
+
+        // Variables de estado global
+        let currentFilter = 'all';
+        let currentModalIndex = 0;
+        let currentCanvasIndex = 0;
+        let currentCanvasForm = 'isolated';
+
+        // Estado del Canvas
+        let canvas, ctx;
+        let isDrawing = false;
+        let brushColor = '#0f766e';
+        let brushSize = 14;
+        let userStrokes = []; // Guardar trazos del usuario para redibujar la plantilla sin perder el dibujo
+        let currentStroke = [];
+
+        // Estado del Quiz
+        let quizMode = 'mixed';
+        let quizScore = 0;
+        let quizTotal = 0;
+        let quizStreak = 0;
+        let currentQuizQuestion = null;
+        let quizAnswered = false;
+
+        /**
+         * INICIALIZACIÓN AL CARGAR LA PÁGINA
+         */
+        window.addEventListener('DOMContentLoaded', () => {
+            renderLettersGrid();
+            populateSelectMenus();
+            updateHarakatLab();
+            initCanvas();
+            generateQuizQuestion();
+
+            // Cerrar modal con tecla Escape o navegar con flechas
+            window.addEventListener('keydown', (e) => {
+                const modal = document.getElementById('letter-modal');
+                if (!modal.classList.contains('hidden')) {
+                    if (e.key === 'Escape') closeLetterModal();
+                    if (e.key === 'ArrowLeft') navigateModalLetter(1); // En RTL izquierda es siguiente
+                    if (e.key === 'ArrowRight') navigateModalLetter(-1);
+                }
+            });
+        });
+
+        /**
+         * SÍNTESIS DE VOZ (Web Speech API)
+         * Pronuncia texto en árabe usando voces `ar-SA` o `ar` disponibles en el navegador.
+         */
+function speakArabic(text) {
+  // Intentar primero con un motor de audio HTML5 online (compatible al 100% con Linux Mint)
+  const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=ar&client=tw-ob`;
+  const audio = new Audio(url);
+  
+  audio.play().catch(() => {
+    // Respaldo con Web Speech API local si no hay conexión a internet
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'ar-SA';
+      utterance.rate = 0.85;
+      window.speechSynthesis.speak(utterance);
+    }
+  });
+}
+
+        /**
+         * NAVEGACIÓN ENTRE PESTAÑAS
+         */
+        function switchTab(tabName) {
+            const tabs = ['abecedario', 'harakat', 'pizarra', 'quiz'];
+            tabs.forEach(t => {
+                const section = document.getElementById(`section-${t}`);
+                const btn = document.getElementById(`tab-${t}`);
+                if (t === tabName) {
+                    section.classList.remove('hidden');
+                    btn.className = 'tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-gold-500 text-andalus-950 shadow flex items-center gap-1.5';
+                } else {
+                    section.classList.add('hidden');
+                    btn.className = 'tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all text-andalus-100 hover:text-white flex items-center gap-1.5';
+                }
+            });
+
+            if (tabName === 'pizarra') {
+                setTimeout(() => resizeCanvas(), 50);
+            }
+        }
+
+        /**
+         * MODO OSCURO
+         */
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            html.classList.toggle('dark');
+            if (html.classList.contains('dark')) {
+                icon.className = 'fa-solid fa-sun';
+            } else {
+                icon.className = 'fa-solid fa-moon';
+            }
+            if (!document.getElementById('section-pizarra').classList.contains('hidden')) {
+                redrawCanvasGuide();
+            }
+        }
+
+        /**
+         * 1. RENDERIZAR CUADRÍCULA DE LAS 28 LETRAS
+         */
+        function renderLettersGrid() {
+            const grid = document.getElementById('letters-grid');
+            grid.innerHTML = '';
+
+            const filtered = ARABIC_LETTERS.filter(letter => {
+                if (currentFilter === 'non-connecting') return !letter.connectsLeft;
+                if (currentFilter === 'solar') return letter.type === 'solar';
+                if (currentFilter === 'lunar') return letter.type === 'lunar';
+                return true;
+            });
+
+            filtered.forEach(letter => {
+                const index = ARABIC_LETTERS.findIndex(l => l.id === letter.id);
+                const card = document.createElement('div');
+                card.className = 'letter-card cursor-pointer bg-white/95 dark:bg-slate-800/95 rounded-2xl p-4 shadow-sm hover:shadow-xl border border-slate-200/80 dark:border-slate-700 hover:border-gold-500 dark:hover:border-gold-400 flex flex-col justify-between relative group select-none';
+                card.dir = 'ltr'; // Contenido interno en español legible de izq a der
+                card.onclick = () => openLetterModal(index);
+
+                card.innerHTML = `
+                    <!-- Cabecera de tarjeta: número, botón audio rápido e indicador sonido especial -->
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="font-bold text-slate-400 dark:text-slate-500">#${letter.id}</span>
+                        <div class="flex items-center gap-1.5">
+                            ${letter.isUniqueSound ? '<span class="w-2 h-2 rounded-full bg-amber-500" title="Sonido nuevo para hispanohablantes"></span>' : ''}
+                            <button onclick="event.stopPropagation(); speakArabic('${letter.ttsPhonetic}')" class="w-7 h-7 rounded-full bg-andalus-50 dark:bg-slate-700 hover:bg-gold-400 hover:text-slate-950 text-andalus-700 dark:text-gold-300 flex items-center justify-center transition" title="Escuchar pronunciación">
+                                <i class="fa-solid fa-volume-high text-[11px]"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Letra Árabe Aislada en Grande -->
+                    <div class="my-3 text-center font-arabic text-5xl sm:text-6xl text-andalus-900 dark:text-white group-hover:text-andalus-600 dark:group-hover:text-gold-400 transition-colors py-1">
+                        ${letter.char}
+                    </div>
+
+                    <!-- Nombre en Español y Sonido Aproximado -->
+                    <div class="text-center border-t border-slate-100 dark:border-slate-700/70 pt-2.5">
+                        <div class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 flex items-center justify-center gap-1">
+                            <span>${letter.name}</span>
+                        </div>
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+                            ${letter.shortSound}
+                        </div>
+                    </div>
+
+                    <!-- Mini vista previa de las formas conectadas -->
+                    <div class="mt-2.5 pt-1.5 border-t border-dashed border-slate-200 dark:border-slate-700/60 flex justify-around text-xs font-arabic text-slate-400 dark:text-slate-400" dir="rtl" title="Formas: Inicial · Media · Final">
+                        <span>${letter.forms.initial}</span>
+                        <span>${letter.forms.medial}</span>
+                        <span>${letter.forms.final}</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterLetters(filterType) {
+            currentFilter = filterType;
+            const buttons = {
+                'all': 'filter-all',
+                'non-connecting': 'filter-non-connecting',
+                'solar': 'filter-solar',
+                'lunar': 'filter-lunar'
+            };
+
+            Object.keys(buttons).forEach(key => {
+                const btn = document.getElementById(buttons[key]);
+                if (key === filterType) {
+                    btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-andalus-700 text-white shadow-sm transition';
+                } else {
+                    btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-andalus-100 transition';
+                }
+            });
+
+            renderLettersGrid();
+        }
+
+        /**
+         * 2. MODAL DETALLADO DE LETRA
+         */
+        function openLetterModal(index) {
+            currentModalIndex = index;
+            const letter = ARABIC_LETTERS[index];
+
+            document.getElementById('modal-letter-char').textContent = letter.char;
+            document.getElementById('modal-letter-order').textContent = `Letra #${letter.id} de 28`;
+            document.getElementById('modal-letter-name').textContent = letter.name;
+            document.getElementById('modal-letter-arabic-name').textContent = letter.arabicName;
+            document.getElementById('modal-letter-short-sound').textContent = `Sonido aproximado: ${letter.shortSound}`;
+
+            // Etiquetas Solar/Lunar y Conexión
+            const typeBadge = document.getElementById('modal-letter-type');
+            if (letter.type === 'solar') {
+                typeBadge.innerHTML = '☀️ Letra Solar (Shamsiyya)';
+                typeBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-400/20 text-amber-200 border border-amber-400/40';
+                document.getElementById('modal-sun-moon-desc').innerHTML = `Es una letra <strong>Solar (شَمْسِيَّة)</strong>: al añadir el artículo "Al-" (الـ), la "L" enmudece y se duplica el sonido de <em>${letter.name}</em> (ej. <em>Ash-Shams</em>).`;
+            } else {
+                typeBadge.innerHTML = '🌙 Letra Lunar (Qamariyya)';
+                typeBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-400/20 text-indigo-200 border border-indigo-400/40';
+                document.getElementById('modal-sun-moon-desc').innerHTML = `Es una letra <strong>Lunar (قَمَرِيَّة)</strong>: al añadir el artículo definido "Al-" (الـ), la "L" se pronuncia claramente (ej. <em>Al-${letter.wordTranslit}</em>).`;
+            }
+
+            const connectBadge = document.getElementById('modal-letter-connect');
+            const nonConnectAlert = document.getElementById('modal-nonconnect-alert');
+            if (letter.connectsLeft) {
+                connectBadge.textContent = '🔗 Conecta por ambos lados';
+                nonConnectAlert.classList.add('hidden');
+            } else {
+                connectBadge.textContent = '⚠️ No conecta a la izquierda';
+                nonConnectAlert.classList.remove('hidden');
+            }
+
+            // Las 4 formas
+            document.getElementById('modal-form-isolated').textContent = letter.forms.isolated;
+            document.getElementById('modal-form-initial').textContent = letter.forms.initial;
+            document.getElementById('modal-form-medial').textContent = letter.forms.medial;
+            document.getElementById('modal-form-final').textContent = letter.forms.final;
+
+            // Pronunciación y Ejemplo
+            document.getElementById('modal-pronunciation-guide').textContent = letter.pronunciation;
+            document.getElementById('modal-example-arabic').textContent = letter.wordArabic;
+            document.getElementById('modal-example-translit').textContent = letter.wordTranslit;
+            document.getElementById('modal-example-meaning').textContent = letter.wordMeaning;
+
+            document.getElementById('letter-modal').classList.remove('hidden');
+            speakArabic(letter.ttsPhonetic);
+        }
+
+        function closeLetterModal() {
+            document.getElementById('letter-modal').classList.add('hidden');
+        }
+
+        function closeModalOnOutsideClick(e) {
+            if (e.target.id === 'letter-modal') {
+                closeLetterModal();
+            }
+        }
+
+        function navigateModalLetter(direction) {
+            let nextIndex = (currentModalIndex + direction + ARABIC_LETTERS.length) % ARABIC_LETTERS.length;
+            openLetterModal(nextIndex);
+        }
+
+        function speakModalLetter() {
+            const letter = ARABIC_LETTERS[currentModalIndex];
+            speakArabic(letter.ttsPhonetic);
+        }
+
+        function speakModalWord() {
+            const letter = ARABIC_LETTERS[currentModalIndex];
+            speakArabic(letter.wordArabic);
+        }
+
+        function openLetterInCanvas() {
+            const index = currentModalIndex;
+            closeLetterModal();
+            switchTab('pizarra');
+            document.getElementById('canvas-letter-select').value = index;
+            selectCanvasLetter(index);
+        }
+
+        /**
+         * 3. SECCIÓN DE VOCALES BREVES (HARAKAT)
+         */
+        function populateSelectMenus() {
+            const harakatSelect = document.getElementById('harakat-letter-select');
+            const canvasSelect = document.getElementById('canvas-letter-select');
+
+            harakatSelect.innerHTML = '';
+            canvasSelect.innerHTML = '';
+
+            ARABIC_LETTERS.forEach((letter, idx) => {
+                const opt1 = document.createElement('option');
+                opt1.value = idx;
+                opt1.textContent = `${letter.id}. ${letter.name} (${letter.char})`;
+                harakatSelect.appendChild(opt1);
+
+                const opt2 = document.createElement('option');
+                opt2.value = idx;
+                opt2.textContent = `${letter.id}. ${letter.name} (${letter.char})`;
+                canvasSelect.appendChild(opt2);
+            });
+
+            // Por defecto en Harakat mostrar Ba (índice 1) para ver claramente los puntos y signos
+            harakatSelect.value = 1;
+        }
+
+        function updateHarakatLab() {
+            const select = document.getElementById('harakat-letter-select');
+            const idx = parseInt(select.value, 10) || 0;
+            const letter = ARABIC_LETTERS[idx];
+            const baseChar = letter.id === 1 ? 'أ' : letter.char;
+
+            // Construir las 4 combinaciones con Fatha, Kasra, Damma y Sukun
+            const combinations = [
+                {
+                    title: 'Con Fatha (ـَ)',
+                    vowel: 'A',
+                    arabic: `${baseChar}\u064E`,
+                    soundLabel: letter.id === 1 ? 'A' : `${letter.name.split(' ')[0].replace(/a$|i$|u$/i, '')}a`,
+                    badgeColor: 'bg-amber-500 text-slate-950'
+                },
+                {
+                    title: 'Con Kasra (ـِ)',
+                    vowel: 'I',
+                    arabic: `${ letter.id === 1 ? 'إ' : baseChar }\u0650`,
+                    soundLabel: letter.id === 1 ? 'I' : `${letter.name.split(' ')[0].replace(/a$|i$|u$/i, '')}i`,
+                    badgeColor: 'bg-teal-400 text-slate-950'
+                },
+                {
+                    title: 'Con Damma (ـُ)',
+                    vowel: 'U',
+                    arabic: `${baseChar}\u064F`,
+                    soundLabel: letter.id === 1 ? 'U' : `${letter.name.split(' ')[0].replace(/a$|i$|u$/i, '')}u`,
+                    badgeColor: 'bg-blue-400 text-slate-950'
+                },
+                {
+                    title: 'Con Sukun (ـْ)',
+                    vowel: 'Sin vocal',
+                    arabic: `أَ${letter.char}\u0652`,
+                    soundLabel: `A-${letter.name.split(' ')[0].toLowerCase()}`,
+                    badgeColor: 'bg-purple-400 text-slate-950'
+                }
+            ];
+
+            const container = document.getElementById('harakat-lab-display');
+            container.innerHTML = '';
+
+            combinations.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'bg-andalus-800/70 hover:bg-andalus-800 border border-gold-500/30 rounded-2xl p-4 text-center flex flex-col justify-between transition cursor-pointer';
+                div.onclick = () => speakArabic(item.arabic);
+                div.innerHTML = `
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-andalus-100 font-medium">${item.title}</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${item.badgeColor}">${item.vowel}</span>
+                    </div>
+                    <div class="font-arabic text-6xl text-gold-300 my-4 select-none">${item.arabic}</div>
+                    <div class="flex items-center justify-between pt-2 border-t border-andalus-700/60 text-xs">
+                        <span class="font-bold text-white">Suena: "${item.soundLabel}"</span>
+                        <span class="w-7 h-7 rounded-lg bg-gold-500 text-andalus-950 flex items-center justify-center">
+                            <i class="fa-solid fa-volume-high"></i>
+                        </span>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        /**
+         * 4. MODO PIZARRA DE PRÁCTICA (CANVAS DE DIBUJO)
+         */
+        function initCanvas() {
+            canvas = document.getElementById('drawingCanvas');
+            ctx = canvas.getContext('2d');
+
+            window.addEventListener('resize', () => {
+                if (!document.getElementById('section-pizarra').classList.contains('hidden')) {
+                    resizeCanvas();
+                }
+            });
+
+            // Eventos de Ratón
+            canvas.addEventListener('mousedown', startPosition);
+            canvas.addEventListener('mouseup', endPosition);
+            canvas.addEventListener('mouseleave', endPosition);
+            canvas.addEventListener('mousemove', draw);
+
+            // Eventos Táctiles (Móvil / Tablet)
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                startPosition(e.touches[0]);
+            }, { passive: false });
+
+            canvas.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                endPosition();
+            }, { passive: false });
+
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                draw(e.touches[0]);
+            }, { passive: false });
+
+            updateCanvasLetterInfo();
+        }
+
+        function resizeCanvas() {
+            const container = document.getElementById('canvas-container');
+            if (!container || container.clientWidth === 0) return;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            redrawCanvasGuide();
+        }
+
+        function getCanvasCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        }
+
+        function startPosition(e) {
+            isDrawing = true;
+            const pos = getCanvasCoords(e);
+            currentStroke = [{ x: pos.x, y: pos.y, color: brushColor, size: brushSize }];
+            draw(e);
+        }
+
+        function endPosition() {
+            if (!isDrawing) return;
+            isDrawing = false;
+            if (currentStroke.length > 0) {
+                userStrokes.push([...currentStroke]);
+                currentStroke = [];
+            }
+            ctx.beginPath();
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            const pos = getCanvasCoords(e);
+            currentStroke.push({ x: pos.x, y: pos.y, color: brushColor, size: brushSize });
+
+            ctx.lineWidth = brushSize;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = brushColor;
+
+            const len = currentStroke.length;
+            if (len >= 2) {
+                ctx.beginPath();
+                ctx.moveTo(currentStroke[len - 2].x, currentStroke[len - 2].y);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+            }
+        }
+
+        function redrawCanvasGuide() {
+            if (!ctx || !canvas.width) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const isDark = document.documentElement.classList.contains('dark');
+
+            // 1. Dibujar renglón guía horizontal
+            const baselineY = canvas.height * 0.62;
+            ctx.save();
+            ctx.strokeStyle = isDark ? 'rgba(148, 163, 184, 0.2)' : 'rgba(15, 118, 110, 0.2)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([8, 6]);
+            ctx.beginPath();
+            ctx.moveTo(20, baselineY);
+            ctx.lineTo(canvas.width - 20, baselineY);
+            ctx.stroke();
+            ctx.restore();
+
+            // 2. Dibujar la letra guía semitransparente si está activada
+            const showGuide = document.getElementById('toggle-guide').checked;
+            if (showGuide) {
+                const letter = ARABIC_LETTERS[currentCanvasIndex];
+                const glyph = letter.forms[currentCanvasForm];
+
+                ctx.save();
+                const fontSize = Math.min(canvas.width, canvas.height) * 0.55;
+                ctx.font = `${fontSize}px "Noto Naskh Arabic", "Amiri", serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = isDark ? 'rgba(251, 191, 36, 0.16)' : 'rgba(15, 118, 110, 0.15)';
+                ctx.fillText(glyph, canvas.width / 2, canvas.height / 2);
+                ctx.restore();
+            }
+
+            // 3. Redibujar trazos guardados del usuario
+            userStrokes.forEach(stroke => {
+                if (stroke.length < 2) return;
+                ctx.beginPath();
+                ctx.lineWidth = stroke[0].size;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.strokeStyle = stroke[0].color;
+                ctx.moveTo(stroke[0].x, stroke[0].y);
+                for (let i = 1; i < stroke.length; i++) {
+                    ctx.lineTo(stroke[i].x, stroke[i].y);
+                }
+                ctx.stroke();
+            });
+        }
+
+        function clearCanvas() {
+            userStrokes = [];
+            currentStroke = [];
+            redrawCanvasGuide();
+        }
+
+        function selectCanvasLetter(index) {
+            currentCanvasIndex = parseInt(index, 10);
+            clearCanvas();
+            updateCanvasLetterInfo();
+        }
+
+        function changeCanvasLetter(delta) {
+            currentCanvasIndex = (currentCanvasIndex + delta + ARABIC_LETTERS.length) % ARABIC_LETTERS.length;
+            document.getElementById('canvas-letter-select').value = currentCanvasIndex;
+            selectCanvasLetter(currentCanvasIndex);
+        }
+
+        function setCanvasForm(formKey) {
+            currentCanvasForm = formKey;
+            const forms = ['isolated', 'initial', 'medial', 'final'];
+            forms.forEach(f => {
+                const btn = document.getElementById(`form-btn-${f}`);
+                if (f === formKey) {
+                    btn.className = 'canvas-form-btn py-2 px-3 rounded-xl text-xs font-semibold bg-andalus-700 text-white shadow';
+                } else {
+                    btn.className = 'canvas-form-btn py-2 px-3 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200';
+                }
+            });
+            clearCanvas();
+        }
+
+        function setBrushColor(color) {
+            brushColor = color;
+        }
+
+        function updateBrushSize(val) {
+            brushSize = parseInt(val, 10);
+        }
+
+        function updateCanvasLetterInfo() {
+            const letter = ARABIC_LETTERS[currentCanvasIndex];
+            const infoBox = document.getElementById('canvas-letter-info');
+            infoBox.innerHTML = `
+                <div class="flex justify-between items-center font-bold text-andalus-900 dark:text-gold-400">
+                    <span>${letter.name} (${letter.arabicName})</span>
+                    <span>${letter.connectsLeft ? '🔗 Conecta a izq.' : '⚠️ No conecta a izq.'}</span>
+                </div>
+                <p class="text-slate-600 dark:text-slate-300 mt-1">${letter.shortSound}. Ejemplo: <strong>${letter.wordArabic}</strong> (${letter.wordTranslit} - ${letter.wordMeaning}).</p>
+            `;
+        }
+
+        function speakCurrentCanvasLetter() {
+            const letter = ARABIC_LETTERS[currentCanvasIndex];
+            speakArabic(letter.ttsPhonetic);
+        }
+
+        /**
+         * 5. MODO QUIZ / PRÁCTICA INTERACTIVA
+         */
+        function setQuizMode(mode) {
+            quizMode = mode;
+            const modes = ['mixed', 'name', 'forms', 'audio'];
+            modes.forEach(m => {
+                const btn = document.getElementById(`qmode-${m}`);
+                if (m === mode) {
+                    btn.className = 'qmode-btn px-3 py-1 rounded-lg text-xs font-semibold bg-andalus-700 text-white';
+                } else {
+                    btn.className = 'qmode-btn px-3 py-1 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-700';
+                }
+            });
+            generateQuizQuestion();
+        }
+
+        function generateQuizQuestion() {
+            quizAnswered = false;
+            document.getElementById('quiz-feedback').classList.add('hidden');
+
+            // Elegir tipo de pregunta
+            const types = ['name', 'forms', 'audio'];
+            const activeType = quizMode === 'mixed' ? types[Math.floor(Math.random() * types.length)] : quizMode;
+
+            // Elegir letra correcta al azar
+            const correctIndex = Math.floor(Math.random() * ARABIC_LETTERS.length);
+            const correctLetter = ARABIC_LETTERS[correctIndex];
+
+            // Generar 3 distractores únicos
+            const options = [correctLetter];
+            while (options.length < 4) {
+                const randomCandidate = ARABIC_LETTERS[Math.floor(Math.random() * ARABIC_LETTERS.length)];
+                if (!options.some(o => o.id === randomCandidate.id)) {
+                    options.push(randomCandidate);
+                }
+            }
+            // Mezclar opciones
+            options.sort(() => Math.random() - 0.5);
+
+            const badgeEl = document.getElementById('quiz-question-badge');
+            const textEl = document.getElementById('quiz-question-text');
+            const stimulusEl = document.getElementById('quiz-stimulus');
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+
+            if (activeType === 'name') {
+                badgeEl.textContent = 'Reconocimiento Visual';
+                textEl.innerHTML = `¿Cuál de estas letras es <strong>"${correctLetter.name}"</strong> (${correctLetter.shortSound})?`;
+                stimulusEl.innerHTML = `
+                    <div class="text-sm text-andalus-700 dark:text-gold-300 font-medium">
+                        Pista: Como en la palabra <em>${correctLetter.wordTranslit}</em> (${correctLetter.wordMeaning})
+                    </div>
+                `;
+
+                options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'quiz-opt-btn py-5 px-4 rounded-2xl bg-white dark:bg-slate-900 hover:bg-andalus-50 dark:hover:bg-slate-700 border-2 border-slate-200 dark:border-slate-700 font-arabic text-5xl text-andalus-900 dark:text-white shadow-sm transition';
+                    btn.textContent = opt.char;
+                    btn.onclick = () => checkQuizAnswer(opt.id === correctLetter.id, btn, correctLetter);
+                    optionsContainer.appendChild(btn);
+                });
+
+            } else if (activeType === 'forms') {
+                const posKeys = [
+                    { key: 'initial', label: 'Inicial (al principio de palabra)' },
+                    { key: 'medial', label: 'Media (en el centro de palabra)' },
+                    { key: 'final', label: 'Final (al terminar la palabra)' }
+                ];
+                const chosenPos = posKeys[Math.floor(Math.random() * posKeys.length)];
+
+                badgeEl.textContent = 'Formas Conectadas';
+                textEl.innerHTML = `¿A qué letra corresponde esta forma <strong>${chosenPos.label}</strong>?`;
+                stimulusEl.innerHTML = `
+                    <div class="font-arabic text-7xl text-andalus-900 dark:text-gold-400 py-2 select-none">
+                        ${correctLetter.forms[chosenPos.key]}
+                    </div>
+                `;
+
+                options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'quiz-opt-btn py-4 px-4 rounded-2xl bg-white dark:bg-slate-900 hover:bg-andalus-50 dark:hover:bg-slate-700 border-2 border-slate-200 dark:border-slate-700 font-semibold text-base text-slate-800 dark:text-white shadow-sm transition flex items-center justify-between';
+                    btn.innerHTML = `
+                        <span>${opt.name} <span class="text-xs text-slate-400">(${opt.shortSound})</span></span>
+                        <span class="font-arabic text-2xl text-andalus-700 dark:text-gold-400">${opt.char}</span>
+                    `;
+                    btn.onclick = () => checkQuizAnswer(opt.id === correctLetter.id, btn, correctLetter);
+                    optionsContainer.appendChild(btn);
+                });
+
+            } else if (activeType === 'audio') {
+                badgeEl.textContent = 'Comprensión Auditiva';
+                textEl.innerHTML = 'Escucha la pronunciación y selecciona la letra correcta:';
+                stimulusEl.innerHTML = `
+                    <button onclick="speakArabic('${correctLetter.ttsPhonetic}')" class="px-6 py-4 rounded-2xl bg-gold-500 hover:bg-gold-400 text-andalus-950 font-bold text-base shadow-lg flex items-center gap-3 mx-auto transition transform hover:scale-105">
+                        <i class="fa-solid fa-volume-high text-2xl"></i>
+                        <span>Reproducir sonido de la letra</span>
+                    </button>
+                `;
+                setTimeout(() => speakArabic(correctLetter.ttsPhonetic), 200);
+
+                options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'quiz-opt-btn py-4 px-5 rounded-2xl bg-white dark:bg-slate-900 hover:bg-andalus-50 dark:hover:bg-slate-700 border-2 border-slate-200 dark:border-slate-700 font-semibold text-base text-slate-800 dark:text-white shadow-sm transition flex items-center justify-between';
+                    btn.innerHTML = `
+                        <span>${opt.name}</span>
+                        <span class="font-arabic text-4xl text-andalus-900 dark:text-gold-400">${opt.char}</span>
+                    `;
+                    btn.onclick = () => checkQuizAnswer(opt.id === correctLetter.id, btn, correctLetter);
+                    optionsContainer.appendChild(btn);
+                });
+            }
+        }
+
+        function checkQuizAnswer(isCorrect, clickedBtn, correctLetter) {
+            if (quizAnswered) return;
+            quizAnswered = true;
+            quizTotal++;
+
+            const feedbackBox = document.getElementById('quiz-feedback');
+            const feedbackText = document.getElementById('quiz-feedback-text');
+            feedbackBox.classList.remove('hidden');
+
+            speakArabic(correctLetter.ttsPhonetic);
+
+            if (isCorrect) {
+                quizScore++;
+                quizStreak++;
+                clickedBtn.className = 'quiz-opt-btn py-4 px-5 rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 border-2 border-emerald-500 text-emerald-900 dark:text-emerald-200 font-bold shadow-md flex items-center justify-around';
+                feedbackBox.className = 'p-4 rounded-xl text-sm font-medium flex flex-col sm:flex-row items-center justify-between gap-3 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 text-emerald-900 dark:text-emerald-200';
+                feedbackText.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i> <strong>¡Excelente!</strong> Es la letra <strong>${correctLetter.name} (${correctLetter.char})</strong> — ${correctLetter.shortSound}.`;
+            } else {
+                quizStreak = 0;
+                clickedBtn.className = 'quiz-opt-btn py-4 px-5 rounded-2xl bg-rose-100 dark:bg-rose-950/80 border-2 border-rose-500 text-rose-900 dark:text-rose-200 font-bold shadow-md flex items-center justify-around';
+                feedbackBox.className = 'p-4 rounded-xl text-sm font-medium flex flex-col sm:flex-row items-center justify-between gap-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-300 text-rose-900 dark:text-rose-200';
+                feedbackText.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-600 mr-1.5"></i> Respuesta incorrecta. La letra correcta era <strong>${correctLetter.name} (${correctLetter.char})</strong> — Formas: <span class="font-arabic text-lg mx-1" dir="rtl">${correctLetter.forms.initial} ${correctLetter.forms.medial} ${correctLetter.forms.final}</span>.`;
+            }
+
+            document.getElementById('quiz-score').textContent = quizScore;
+            document.getElementById('quiz-total').textContent = quizTotal;
+            document.getElementById('quiz-streak').textContent = quizStreak;
+        }
+
+        function nextQuizQuestion() {
+            generateQuizQuestion();
+        }
+    </script>
+</body>
+</html>
